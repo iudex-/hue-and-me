@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha2/css/bootstrap.min.css" integrity="sha384-DhY6onE6f3zzKbjUPRc2hOzGAdEf4/Dz+WJwBvEYL/lkkIsI3ihufq9hk9K4lVoK" crossorigin="anonymous">
+    <title>hue</title>
+  </head>
+  <body>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha2/js/bootstrap.bundle.min.js" integrity="sha384-BOsAfwzjNJHrJ8cZidOg56tcQWfp6y72vEJ8xQ9w6Quywb24iOsW913URv1IS4GD" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+    <div id="container">
+
+      <div id="accordion">
+
+        <div class="card">
+          <div class="card-header" id="headingOne" data-toggle="collapse" data-target="#collapseOne">
+            Configuration
+          </div>
+      
+          <!-- without data-parent="#accordion" this can be opened independently -->
+          <div id="collapseOne" class="collapse" aria-labelledby="headingOne">
+            <div class="card-body">
+
+              <div class="mb-3">
+                <label for="host" class="form-label">Host</label>
+                <input type="text" class="form-control form-control-sm" placeholder="host" v-model="host" id="host">
+              </div>
+              <div class="mb-3">
+                <label for="user" class="form-label">User</label>
+                <input type="text" class="form-control form-control-sm" placeholder="user" v-model="user" id="user">
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="details" v-model="details">
+                <label class="form-check-label" for="details">
+                  Show details
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header" data-toggle="collapse" data-target="#collapseTwo">
+            Devices
+          </div>
+          <div id="collapseTwo" class="collapse show" data-parent="#accordion">
+            <div class="card-body p-0">
+
+              <div class="list-group">
+                <label class="list-group-item list-group-item-action" v-for="ligth in lights"  v-bind:for="`state-${ligth.id}`">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-bind:id="`state-${ligth.id}`"  v-bind:checked="ligth.state.on" @change="toggle(ligth.id, $event)">
+                    <label class="form-check-label font-weight-bolder" v-bind:for="`state-${ligth.id}`">{{ligth.name}}</label>
+                    <span class="text-muted">{{ligth.type}}</span>
+                  </div>
+                  <pre v-if="details">
+                    {{ ligth }}
+                  </pre>
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <script>
+    const host = '192.168.0.25';
+    const user = 'FWYx-ZDXHudwxLQ6wYveS25v3MMykkCNU9Ug3IG3';
+    
+    console.log(new URL('lights', `http://${host}/api/${user}/`));
+    
+    const get = async url => {
+      const response = await fetch(new URL(url, `http://${host}/api/${user}/`));
+      return response.json();
+    }
+    const put = async (urlIn, body) => {
+      const url = new URL(urlIn, `http://${host}/api/${user}/`);
+      console.log(`PUT ${url}`, body);
+      const result = await fetch(url, {
+        method: 'put',
+        body: JSON.stringify(body),
+      });
+      const res = await result.json();
+      console.log('response', res);
+      return res;
+    
+    }
+    
+    const lights = []
+    
+    document.addEventListener("DOMContentLoaded", event => {
+      console.log("DOM fully loaded and parsed");
+    
+      const app = new Vue({
+        el: '#container',
+        data: {
+          lights,
+          details: false,
+          host,
+          user,
+        },
+        methods: {
+          toggle: (id, event) => {
+            console.log('toggle', id, event.srcElement.checked);
+            put(`lights/${id}/state`, {on: event.srcElement.checked})
+          },
+        },
+      })
+    });
+    
+    
+    
+    (async () => {
+      const lightsRes = await get('lights');
+      console.log(lightsRes);
+    
+      const lightsArray = Object.entries(lightsRes).map(([id, value]) => ({id, ...value}))
+      console.log(lightsArray)
+      lightsArray.forEach(e => lights.push(e))
+    })()
+    
+    </script>
+  </body>
+</html>
