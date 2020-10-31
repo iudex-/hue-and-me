@@ -1,7 +1,9 @@
 
 # hue-and-me
 
-> Single html-file frontend for controlling devices throught a local hue bridge
+> Single html-file frontend for controlling devices through a local hue bridge
+
+<img src="./.github/res/phone-2.jpg" width="300"> <img src="./.github/res/phone-1.jpg" width="300">
 
 ToDo:
 - [ ] continously sync state
